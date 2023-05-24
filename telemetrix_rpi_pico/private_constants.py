@@ -52,7 +52,8 @@ class PrivateConstants:
     SPI_READ_BLOCKING = 26
     SPI_SET_FORMAT = 27
     SPI_CS_CONTROL = 28
-
+    SET_SCAN_DELAY = 29
+    
     # reports
     # debug data from Arduino
     DIGITAL_REPORT = DIGITAL_WRITE

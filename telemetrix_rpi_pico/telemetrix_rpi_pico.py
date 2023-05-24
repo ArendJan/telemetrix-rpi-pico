@@ -1403,7 +1403,8 @@ class TelemetrixRpiPico(threading.Thread):
         This method attempts an orderly shutdown
         If any exceptions are thrown, they are ignored.
         """
-
+        
+        self.shutdown_on_exception = False
         self.shutdown_flag = True
 
         self._stop_threads()
@@ -1416,8 +1417,13 @@ class TelemetrixRpiPico(threading.Thread):
             command = [PrivateConstants.RESET_BOARD]
             self._send_command(command)
             time.sleep(.2)
-        self.serial_port.close()
-        self.serial_port = None
+        if(self.serial_port != None):
+            self.serial_port.close()
+            self.serial_port = None
+
+    def set_scan_delay(self, delay):
+        command = [PrivateConstants.SET_SCAN_DELAY, delay]
+        self._send_command(command)
 
     '''
     report message handlers
