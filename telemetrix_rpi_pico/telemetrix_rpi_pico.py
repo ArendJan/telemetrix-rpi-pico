@@ -1176,6 +1176,8 @@ class TelemetrixRpiPico(threading.Thread):
             if(quadrature):
                 self.pico_pins[pin_B] = PrivateConstants.AT_ENCODER
                 encoder_type = 2
+            else:
+                pin_B = 0
             
             
             command = [PrivateConstants.ENCODER_NEW, encoder_type, pin_A, pin_B]
