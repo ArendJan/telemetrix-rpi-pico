@@ -1147,26 +1147,28 @@ class TelemetrixRpiPico(threading.Thread):
 
     def set_pin_mode_encoder(self, pin_A, pin_B=0, callback=None,quadrature = True):
         """
-        :param trigger_pin:  Sensor trigger gpio pin
+        :param pin_A:  Sensor trigger gpio pin
 
-        :param echo_pin: Sensor echo gpio pin
+        :param pin_B: Sensor echo gpio pin
 
-        :param callback: callback
+        :param callback: callback, only called on encoder step
+
+        :param quadrature: quadrature encoder or single encoder(False)
 
        callback returns a data list:
 
-       [ SONAR_DISTANCE, trigger_pin, distance_value, time_stamp]
+       [ ENCODER_REPORT, pin_A, steps, time_stamp]
 
-       SONAR_DISTANCE =  11
+       ENCODER_REPORT =  14
 
         """
 
         if not callback:
             if self.shutdown_on_exception:
                 self.shutdown()
-            raise RuntimeError('set_pin_mode_encoder: A Callback must be specified')
+            raise RuntimeError('set_pin_mode_encoder: A callback must be specified')
         if quadrature and pin_B==-1:
-            raise RuntimeError('set_pin_mode_encoder: quadrature requires pin_B')
+            raise RuntimeError('set_pin_mode_encoder: quadrature encoder requires pin_B')
         if self.encoder_count < PrivateConstants.MAX_ENCODERS:
             self.encoder_callbacks[pin_A] = callback
             self.encoder_count+= 1
@@ -1673,14 +1675,14 @@ class TelemetrixRpiPico(threading.Thread):
 
         :param report: data[0] = pin A, data[1] = steps (signed)
 
-        callback report format: [PrivateConstants.SONAR_DISTANCE, pin_A, steps, time_stamp]
+        callback report format: [PrivateConstants.ENCODER_REPORT, pin_A, steps, time_stamp]
         """
 
         # get callback from pin number
         cb = self.encoder_callbacks[report[0]]
 
         steps = report[1]
-        if(steps > 128):
+        if(steps > 128): # convert from uint8 to int8 value
             steps -= 256
         
         cb_list = [PrivateConstants.ENCODER_REPORT, report[0],

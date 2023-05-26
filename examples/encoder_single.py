@@ -26,6 +26,7 @@ TRIGGER = 1
 STEPS = 2
 TIME_STAMP = 3
 def the_callback(data):
+    # will only be called when an encoder step is measured
     date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(data[TIME_STAMP]))
 
     print(f'{date}\t Encoder Pin::\t{data[TRIGGER]}\t Steps:\t'
