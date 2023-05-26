@@ -18,7 +18,7 @@
 import sys
 import threading
 import time
-from collections import deque
+from queue import Queue
 
 import serial
 # noinspection PyPackageRequirementscd
@@ -97,7 +97,7 @@ class TelemetrixRpiPico(threading.Thread):
         self.reset_on_shutdown = reset_on_shutdown
 
         # create a deque to receive and process data from the pico
-        self.the_deque = deque()
+        self.the_queque = Queue()
 
         # The report_dispatch dictionary is used to process
         # incoming report messages by looking up the report message
@@ -1723,17 +1723,16 @@ class TelemetrixRpiPico(threading.Thread):
         self.run_event.wait()
 
         while self._is_running() and not self.shutdown_flag:
-            if len(self.the_deque):
+            # if len(self.the_queque):
                 # response_data will be populated with the received data for the report
                 response_data = []
-                packet_length = self.the_deque.popleft()
+                packet_length = self.the_queque.get()
 
                 if packet_length:
                     # get all the data for the report and place it into response_data
                     for i in range(packet_length):
-                        while not len(self.the_deque):
-                            time.sleep(self.sleep_tune)
-                        data = self.the_deque.popleft()
+                        
+                        data = self.the_queque.get()
                         response_data.append(data)
 
                     # get the report type and look up its dispatch method
@@ -1754,8 +1753,8 @@ class TelemetrixRpiPico(threading.Thread):
                         self.shutdown()
                     raise RuntimeError(
                         'A report with a packet length of zero was received.')
-            else:
-                time.sleep(self.sleep_tune)
+            # else:
+            #     time.sleep(self.sleep_tune)
 
     def _serial_receiver(self):
         """
@@ -1768,11 +1767,12 @@ class TelemetrixRpiPico(threading.Thread):
             # we can get an OSError: [Errno9] Bad file descriptor when shutting down
             # just ignore it
             try:
-                if self.serial_port.inWaiting():
-                    c = self.serial_port.read()
-                    self.the_deque.append(ord(c))
-                else:
-                    time.sleep(self.sleep_tune)
+                # if self.serial_port.inWaiting():
+                    c = self.serial_port.read(1)
+                    if(c!=b''):
+                        self.the_queque.put(ord(c))
+                # else:
+                #     time.sleep(self.sleep_tune)
                     # continue
             except OSError:
                 pass
