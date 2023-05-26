@@ -96,8 +96,8 @@ class TelemetrixRpiPico(threading.Thread):
         self.shutdown_on_exception = shutdown_on_exception
         self.reset_on_shutdown = reset_on_shutdown
 
-        # create a deque to receive and process data from the pico
-        self.the_queque = Queue()
+        # create a queue to receive and process data from the pico
+        self.the_queue = Queue()
 
         # The report_dispatch dictionary is used to process
         # incoming report messages by looking up the report message
@@ -1719,22 +1719,22 @@ class TelemetrixRpiPico(threading.Thread):
     def _reporter(self):
         """
         This is the reporter thread. It continuously pulls data from
-        the deque. When a full message is detected, that message is
+        the queue. When a full message is detected, that message is
         processed.
         """
         self.run_event.wait()
 
         while self._is_running() and not self.shutdown_flag:
-            # if len(self.the_queque):
+            # if len(self.the_queue):
                 # response_data will be populated with the received data for the report
                 response_data = []
-                packet_length = self.the_queque.get()
+                packet_length = self.the_queue.get()
 
                 if packet_length:
                     # get all the data for the report and place it into response_data
                     for i in range(packet_length):
                         
-                        data = self.the_queque.get()
+                        data = self.the_queue.get()
                         response_data.append(data)
 
                     # get the report type and look up its dispatch method
@@ -1761,7 +1761,7 @@ class TelemetrixRpiPico(threading.Thread):
     def _serial_receiver(self):
         """
         Thread to continuously check for incoming data.
-        When a byte comes in, place it onto the deque.
+        When a byte comes in, place it onto the queue.
         """
         self.run_event.wait()
 
@@ -1772,7 +1772,7 @@ class TelemetrixRpiPico(threading.Thread):
                 # if self.serial_port.inWaiting():
                     c = self.serial_port.read(1)
                     if(c!=b''):
-                        self.the_queque.put(ord(c))
+                        self.the_queue.put(ord(c))
                 # else:
                 #     time.sleep(self.sleep_tune)
                     # continue
