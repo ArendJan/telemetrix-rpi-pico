@@ -53,7 +53,8 @@ class PrivateConstants:
     SPI_SET_FORMAT = 27
     SPI_CS_CONTROL = 28
     SET_SCAN_DELAY = 29
-    
+    ENCODER_NEW = 30
+
     # reports
     # debug data from Arduino
     DIGITAL_REPORT = DIGITAL_WRITE
@@ -67,7 +68,7 @@ class PrivateConstants:
     SONAR_DISTANCE = 11
     DHT_REPORT = 12
     SPI_REPORT = 13
-
+    ENCODER_REPORT = 14
     DEBUG_PRINT = 99
 
     TELEMETRIX_VERSION = "1.3"
@@ -93,6 +94,7 @@ class PrivateConstants:
     AT_I2C = 9
     AT_NEO_PIXEL = 10
     AT_SPI = 11
+    AT_ENCODER = 12
     AT_MODE_NOT_SET = 255
 
     # flag to indicate that an i2c command does not specify a register
@@ -119,6 +121,8 @@ class PrivateConstants:
 
     # maximum number of DHT devices allowed
     MAX_DHTS = 2
+
+    MAX_ENCODERS = 4
 
     # DHT Report sub-types
     DHT_DATA = 0

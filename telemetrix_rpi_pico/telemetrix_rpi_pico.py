@@ -130,7 +130,7 @@ class TelemetrixRpiPico(threading.Thread):
             {PrivateConstants.SONAR_DISTANCE: self._sonar_distance_report})
         self.report_dispatch.update({PrivateConstants.DHT_REPORT: self._dht_report})
         self.report_dispatch.update({PrivateConstants.SPI_REPORT: self._spi_report})
-
+        self.report_dispatch.update({PrivateConstants.ENCODER_REPORT: self._encoder_report})
         # up to 16 pwm pins may be simultaneously active
         self.pwm_active_count = 0
 
@@ -161,6 +161,9 @@ class TelemetrixRpiPico(threading.Thread):
         self.dht_callbacks = {}
 
         self.dht_count = 0
+
+        self.encoder_callbacks = {}
+        self.encoder_count = 0
 
         # serial port in use
         self.serial_port = None
@@ -1142,6 +1145,46 @@ class TelemetrixRpiPico(threading.Thread):
                 self.shutdown()
             raise RuntimeError('Maximum number of supported sonar devices exceeded.')
 
+    def set_pin_mode_encoder(self, pin_A, pin_B=0, callback=None,quadrature = True):
+        """
+        :param trigger_pin:  Sensor trigger gpio pin
+
+        :param echo_pin: Sensor echo gpio pin
+
+        :param callback: callback
+
+       callback returns a data list:
+
+       [ SONAR_DISTANCE, trigger_pin, distance_value, time_stamp]
+
+       SONAR_DISTANCE =  11
+
+        """
+
+        if not callback:
+            if self.shutdown_on_exception:
+                self.shutdown()
+            raise RuntimeError('set_pin_mode_encoder: A Callback must be specified')
+        if quadrature and pin_B==-1:
+            raise RuntimeError('set_pin_mode_encoder: quadrature requires pin_B')
+        if self.encoder_count < PrivateConstants.MAX_ENCODERS:
+            self.encoder_callbacks[pin_A] = callback
+            self.encoder_count+= 1
+            self.pico_pins[pin_A] = PrivateConstants.AT_ENCODER
+
+            encoder_type = 1 #single
+            if(quadrature):
+                self.pico_pins[pin_B] = PrivateConstants.AT_ENCODER
+                encoder_type = 2
+            
+            
+            command = [PrivateConstants.ENCODER_NEW, encoder_type, pin_A, pin_B]
+            self._send_command(command)
+        else:
+            if self.shutdown_on_exception:
+                self.shutdown()
+            raise RuntimeError('Maximum number of supported sonar devices exceeded.')
+
     def spi_cs_control(self, chip_select_pin, select):
         """
         Control an SPI chip select line
@@ -1422,6 +1465,9 @@ class TelemetrixRpiPico(threading.Thread):
             self.serial_port = None
 
     def set_scan_delay(self, delay):
+        """
+        Set the scan delay to a delay in ms
+        """
         command = [PrivateConstants.SET_SCAN_DELAY, delay]
         self._send_command(command)
 
@@ -1617,6 +1663,26 @@ class TelemetrixRpiPico(threading.Thread):
         else:
             cb_list = [PrivateConstants.SONAR_DISTANCE, report[0],
                        (report[1] + (report[2] / 100)), time.time()]
+
+        cb(cb_list)
+
+    def _encoder_report(self, report):
+        """
+
+        :param report: data[0] = pin A, data[1] = steps (signed)
+
+        callback report format: [PrivateConstants.SONAR_DISTANCE, pin_A, steps, time_stamp]
+        """
+
+        # get callback from pin number
+        cb = self.encoder_callbacks[report[0]]
+
+        steps = report[1]
+        if(steps > 128):
+            steps -= 256
+        
+        cb_list = [PrivateConstants.ENCODER_REPORT, report[0],
+                    steps, time.time()]
 
         cb(cb_list)
 
