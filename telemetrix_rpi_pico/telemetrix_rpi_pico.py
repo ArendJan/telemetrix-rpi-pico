@@ -1651,7 +1651,7 @@ class TelemetrixRpiPico(threading.Thread):
     def _sonar_distance_report(self, report):
         """
 
-        :param report: data[0] = trigger pin, data[1] and data[2] = distance
+        :param report: data[0] = trigger pin, data[1], data[2] and data[3] = distance
 
         callback report format: [PrivateConstants.SONAR_DISTANCE, trigger_pin,
         distance  in centimeters, time_stamp]
@@ -1661,12 +1661,12 @@ class TelemetrixRpiPico(threading.Thread):
         cb = self.sonar_callbacks[report[0]]
 
         # build report data
-        if report[1] == 0 and report[2] == 0:
+        if report[1] == 0 and report[2] == 0 and report[3] == 0:
             cb_list = [PrivateConstants.SONAR_DISTANCE, report[0],
                        0, time.time()]
         else:
             cb_list = [PrivateConstants.SONAR_DISTANCE, report[0],
-                       (report[1] + (report[2] / 100)), time.time()]
+                       (report[1]*100 + report[2] + (report[3] / 100)), time.time()]
 
         cb(cb_list)
 
